@@ -7,7 +7,7 @@
     "identityProviders": {
       "azureActiveDirectory": {
         "registration": {
-          "openIdIssuer": "https://login.microsoftonline.com/VERVANG-DOOR-JE-TENANT-ID/v2.0",
+          "openIdIssuer": "https://login.microsoftonline.com/fb429be8-f725-4a9f-b60e-07f74c4a9cfc/v2.0",
           "clientIdSettingName": "AZURE_CLIENT_ID",
           "clientSecretSettingName": "AZURE_CLIENT_SECRET"
         }
