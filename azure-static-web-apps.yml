@@ -1,0 +1,55 @@
+name: Azure Static Web Apps CI/CD
+
+# Bij elke push naar 'main' wordt de app gebouwd en naar Azure Static Web Apps uitgerold.
+# Zet in GitHub (Settings > Secrets and variables > Actions) het secret AZURE_STATIC_WEB_APPS_API_TOKEN
+# met het "deployment token" van je Static Web App (Azure Portal > Static Web App > Overview > Manage deployment token).
+# Maakte de Azure Portal bij het aanmaken van de Static Web App zelf al een workflow aan? Gebruik dan
+# óf dat bestand óf dit bestand, niet allebei (verwijder het andere).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+
+jobs:
+  build_and_deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Bouwen en uitrollen
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: API-tests (facturatielogica en validatie)
+        working-directory: api
+        run: |
+          npm install
+          npm test
+
+      - name: Uitrollen naar Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: /
+          api_location: api
+          output_location: dist
+          api_build_command: npm run build
+
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Preview-omgeving opruimen
+    steps:
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close

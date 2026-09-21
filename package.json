@@ -1,0 +1,27 @@
+{
+  "name": "urenregistratie-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API voor de APu Urenregistratie (Azure Static Web Apps managed functions)",
+  "main": "dist/src/functions/*.js",
+  "scripts": {
+    "build": "tsc || (echo LET OP: TypeScript meldt fouten (zie hierboven), de JavaScript is wel gegenereerd. && exit 0)",
+    "typecheck": "tsc --noEmit",
+    "watch": "tsc -w",
+    "prestart": "npm run build",
+    "start": "func start",
+    "test": "tsc && node --test \"dist/test/*.test.js\""
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "mssql": "^11.0.1"
+  },
+  "devDependencies": {
+    "@types/mssql": "^9.1.5",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

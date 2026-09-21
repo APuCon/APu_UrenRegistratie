@@ -1,0 +1,9 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "",
+    "SQL_CONNECTION_STRING": "Server=tcp:<jouw-server>.database.windows.net,1433;Initial Catalog=<jouw-database>;User ID=app_api;Password=<wachtwoord>;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "ADMIN_EMAILS": "a.pullens@apuconsultancy.nl"
+  }
+}

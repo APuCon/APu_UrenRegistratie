@@ -1,0 +1,118 @@
+// =====================================================================
+// APu Urenregistratie - DAX voor Power BI
+//
+// 1. RELATIES (Modelweergave), alle één-op-veel, filterrichting: enkelvoudig
+//      Klant[KlantId]           1 -> *  Uren[KlantId]
+//      Project[ProjectId]       1 -> *  Uren[ProjectId]
+//      Functie[FunctieId]       1 -> *  Uren[FunctieId]
+//      Medewerker[MedewerkerId] 1 -> *  Uren[MedewerkerId]
+//      Facturatie[FacturatieId] 1 -> *  Uren[FacturatieId]     (actief; lege waarden = niet gefactureerd)
+//      Kalender[Datum]          1 -> *  Uren[Datum]
+//      Klant[KlantId]           1 -> *  Project[KlantId]        (optioneel)
+//      Klant[KlantId]           1 -> *  Tarief[KlantId]         (optioneel)
+//      Functie[FunctieId]       1 -> *  Tarief[FunctieId]       (optioneel)
+//    Verberg in tabel Uren de kolommen Klant, ProjectCode, Project, Functie en
+//    Medewerker (rechtsklik > Verbergen in rapportweergave): gebruik in visuals
+//    de kolommen uit de dimensietabellen.
+//    Maak geen relatie tussen FacturatiePerProject en de rest; die tabel is
+//    een losse samenvatting.
+//
+// 2. Maak een lege tabel voor de measures: Start > Gegevens invoeren, naam
+//    "_Maatstaven". Plak de measures hieronder er één voor één in
+//    (Nieuwe maatstaf), of gebruik Tabular Editor.
+//
+// 3. Kalendertabel: Modellering > Nieuwe tabel, plak het eerste blok. Markeer
+//    hem als datumtabel (Tabelhulpmiddelen > Als datumtabel markeren > Datum).
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// KALENDER (nieuwe tabel)
+// ---------------------------------------------------------------------
+Kalender =
+VAR Basis =
+    CALENDAR ( DATE ( YEAR ( MIN ( Uren[Datum] ) ), 1, 1 ), DATE ( YEAR ( MAX ( Uren[Datum] ) ), 12, 31 ) )
+RETURN
+    SELECTCOLUMNS (
+        Basis,
+        "Datum", [Date],
+        "Jaar", YEAR ( [Date] ),
+        "Maandnummer", MONTH ( [Date] ),
+        "Maand", FORMAT ( [Date], "mmm yyyy" ),
+        "JaarMaand", YEAR ( [Date] ) * 100 + MONTH ( [Date] ),
+        "Kwartaal", "K" & QUARTER ( [Date] ) & " " & YEAR ( [Date] )
+    )
+// Sorteer "Maand" op "JaarMaand" (Kolomhulpmiddelen > Sorteren op kolom).
+
+
+// ---------------------------------------------------------------------
+// BASISMAATSTAVEN
+// ---------------------------------------------------------------------
+Uren totaal = SUM ( Uren[Uren] )
+
+Uren gefactureerd = SUM ( Uren[UrenGefactureerd] )
+
+Uren niet gefactureerd = SUM ( Uren[UrenNietGefactureerd] )
+
+Bedrag totaal = SUM ( Uren[Bedrag] )
+
+Bedrag gefactureerd = SUM ( Uren[BedragGefactureerd] )
+
+Bedrag niet gefactureerd = SUM ( Uren[BedragNietGefactureerd] )
+
+
+// ---------------------------------------------------------------------
+// AFGELEIDE MAATSTAVEN
+// ---------------------------------------------------------------------
+// Aandeel van het bedrag dat al gefactureerd is (0-100%).
+Facturatiegraad % =
+DIVIDE ( [Bedrag gefactureerd], [Bedrag totaal] )
+
+// Gemiddeld uurtarief, gewogen naar uren.
+Gemiddeld uurtarief =
+DIVIDE ( [Bedrag totaal], [Uren totaal] )
+
+// Aantal dagen sinds de oudste nog niet gefactureerde registratie.
+Oudste openstaande dag (dagen) =
+VAR Oudste =
+    CALCULATE ( MIN ( Uren[Datum] ), Uren[IsGefactureerd] = FALSE () )
+RETURN
+    IF ( ISBLANK ( Oudste ), BLANK (), DATEDIFF ( Oudste, TODAY (), DAY ) )
+
+// Nog te factureren bedrag van registraties die ouder zijn dan 30 dagen.
+Niet gefactureerd ouder dan 30 dagen =
+CALCULATE (
+    [Bedrag niet gefactureerd],
+    KEEPFILTERS ( Uren[Datum] < TODAY () - 30 )
+)
+
+// Aantal facturaties (batches) in de huidige context.
+Aantal facturaties = DISTINCTCOUNT ( Uren[FacturatieId] )
+
+// Gefactureerd bedrag, cumulatief over het jaar (voor lijngrafiek).
+Bedrag gefactureerd YTD =
+TOTALYTD ( [Bedrag gefactureerd], Kalender[Datum] )
+
+// Omzet (registratiedatum) t.o.v. dezelfde periode vorig jaar.
+Bedrag totaal vorig jaar =
+CALCULATE ( [Bedrag totaal], SAMEPERIODLASTYEAR ( Kalender[Datum] ) )
+
+
+// ---------------------------------------------------------------------
+// TIP VOOR VISUALS
+//   Dashboard "per klant": matrix met rijen Klant > Project en waarden
+//   [Uren gefactureerd], [Uren niet gefactureerd], [Bedrag gefactureerd],
+//   [Bedrag niet gefactureerd], [Facturatiegraad %].
+//
+//   Gestapelde staaf per klant: as = Klant[Klant], waarden =
+//   [Bedrag gefactureerd] en [Bedrag niet gefactureerd].
+//   Gebruik twee duidelijk verschillende kleuren (bijv. #1a8aa5 en #eb6834,
+//   zoals in de app).
+//
+//   Slicers: Kalender[Jaar], Klant[Klant], Project[Project], Functie[Functie].
+//
+//   Uren.Datum is de datum waarop het werk is gedaan; Facturatie.FactuurDatum
+//   is de datum waarop het is gefactureerd. Wil je de facturatie per maand van
+//   factuurdatum zien, maak dan een tweede (inactieve) relatie of gebruik
+//   Facturatie[FactuurDatum] direct als as.
+// ---------------------------------------------------------------------
