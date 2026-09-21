@@ -1,27 +1,26 @@
 {
-  "name": "urenregistratie-api",
+  "name": "urenregistratie",
   "version": "1.0.0",
   "private": true,
-  "description": "API voor de APu Urenregistratie (Azure Static Web Apps managed functions)",
-  "main": "dist/src/functions/*.js",
+  "type": "module",
+  "description": "Urenregistratie voor APu Consultancy (Azure Static Web Apps + Azure SQL)",
   "scripts": {
-    "build": "tsc || (echo LET OP: TypeScript meldt fouten (zie hierboven), de JavaScript is wel gegenereerd. && exit 0)",
+    "dev": "vite",
+    "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "watch": "tsc -w",
-    "prestart": "npm run build",
-    "start": "func start",
-    "test": "tsc && node --test \"dist/test/*.test.js\""
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@azure/functions": "^4.5.0",
-    "mssql": "^11.0.1"
+    "@fontsource/dm-sans": "^5.1.0",
+    "@fontsource/manrope": "^5.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/mssql": "^9.1.5",
-    "@types/node": "^20.14.0",
-    "typescript": "^5.5.0"
-  },
-  "engines": {
-    "node": ">=20"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.11"
   }
 }
